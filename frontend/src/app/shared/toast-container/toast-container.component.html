@@ -1,0 +1,17 @@
+<div class="fixed top-4 right-4 z-[1000] space-y-2">
+  <div *ngFor="let t of toasts" class="w-80 rounded-xl border p-3 shadow-lg flex items-start gap-3"
+       [ngClass]="{
+         'bg-emerald-50 border-emerald-200 text-emerald-900': t.type === 'success',
+         'bg-rose-50 border-rose-200 text-rose-900': t.type === 'error',
+         'bg-slate-50 border-slate-200 text-slate-900': t.type === 'info'
+       }">
+    <div class="mt-0.5">
+      <span *ngIf="t.type === 'success'">✅</span>
+      <span *ngIf="t.type === 'error'">⚠️</span>
+      <span *ngIf="t.type === 'info'">ℹ️</span>
+    </div>
+    <div class="text-sm flex-1">{{ t.message }}</div>
+    <button class="btn-icon" (click)="close(t.id)">✕</button>
+  </div>
+</div>
+

@@ -1,0 +1,189 @@
+﻿<div class="mx-auto max-w-7xl py-8">
+  <h1 class="text-2xl font-semibold tracking-tight">New invoice</h1>
+  <div class="mt-4 grid lg:grid-cols-3 gap-6 items-start">
+    <div class="lg:col-span-2 rounded-2xl border bg-white p-6">
+      <div class="grid sm:grid-cols-2 gap-3 text-sm">
+        <div class="sm:col-span-2 grid sm:grid-cols-2 gap-3">
+          <input [(ngModel)]="clientSearchTerm" (ngModelChange)="filterClients()" placeholder="Search client by name or email" class="rounded-xl border px-3 py-2" />
+          <select class="rounded-xl border px-3 py-2" (change)="onClientSelected($event)">
+            <option [value]="null" disabled selected>Select client</option>
+            <option *ngFor="let c of filteredCustomers" [value]="c.id">{{ c.name }} ({{ c.currency }})</option>
+          </select>
+        </div>
+        <div class="flex flex-col">
+          <label class="text-xs text-gray-600 mb-1">Issue date</label>
+          <input type="date" [(ngModel)]="issueDate" (change)="persistDraft(); updatePreviewInvoice()" class="rounded-xl border px-3 py-2" placeholder="YYYY-MM-DD" title="Issue date" />
+        </div>
+        <div class="flex flex-col">
+          <label class="text-xs text-gray-600 mb-1">Due date</label>
+          <input type="date" [(ngModel)]="dueDate" (change)="persistDraft(); updatePreviewInvoice()" class="rounded-xl border px-3 py-2" placeholder="YYYY-MM-DD" title="Due date" />
+        </div>
+        <div *ngIf="selectedClient" class="sm:col-span-2 text-xs text-gray-600">
+          Selected client: {{ selectedClient.name }} ({{ selectedClient.currency }})
+        </div>
+        <div *ngIf="currencyMismatch" class="sm:col-span-2 text-xs text-red-600">
+          Warning: Invoice currency ({{ invoiceCurrency }}) does not match client currency ({{ selectedClient?.currency }}).
+        </div>
+      </div>
+
+      <!-- Line items moved up for a more intuitive flow -->
+      <div class="mt-6 pt-6 border-t border-gray-200">
+        <div class="text-sm font-semibold">Line items</div>
+        <div class="mt-2 space-y-2">
+          <!-- Column headers -->
+          <div class="hidden md:grid grid-cols-12 gap-2 text-[11px] text-gray-600 px-1">
+            <div class="col-span-4">Item</div>
+            <div class="col-span-2">Qty</div>
+            <div class="col-span-2">Unit</div>
+            <div class="col-span-2">Unit price</div>
+            <div class="col-span-2 text-right">Amount</div>
+          </div>
+          <div *ngFor="let l of lines; let idx = index" class="space-y-2">
+            <div *ngIf="idx > 0" class="border-t border-gray-200"></div>
+            <!-- Item row -->
+            <div class="grid grid-cols-12 gap-2 text-sm items-center">
+              <input
+                [value]="l.description"
+                (input)="updateLine(idx, { description: $any($event.target).value })"
+                placeholder="Description"
+                class="col-span-12 md:col-span-4 w-full rounded-xl border px-3 py-2"
+              />
+              <input
+                type="number"
+                [value]="l.qty"
+                (input)="updateLine(idx, { qty: +$any($event.target).value })"
+                class="col-span-6 md:col-span-2 w-full rounded-xl border px-3 py-2"
+                placeholder="Qty"
+              />
+              <input
+                [value]="l.unit || ''"
+                (input)="updateLine(idx, { unit: $any($event.target).value })"
+                class="col-span-6 md:col-span-2 w-full rounded-xl border px-3 py-2"
+                placeholder="e.g., hours, pcs"
+              />
+              <input
+                type="number"
+                [value]="l.price"
+                (input)="updateLine(idx, { price: +$any($event.target).value })"
+                class="col-span-6 md:col-span-2 w-full rounded-xl border px-3 py-2"
+                placeholder="Price"
+              />
+              <div class="col-span-12 md:col-span-2 flex md:flex-col items-start md:items-end justify-between md:justify-center gap-2 min-w-0 overflow-hidden">
+                <span class="flex items-center gap-2 rounded-full border px-2 py-0.5 text-xs text-gray-700 bg-white/70 border-gray-200 max-w-full min-w-0">
+                  <span class="text-gray-500 md:hidden">Amount</span>
+                  <span class="font-medium truncate">{{ settingsService.formatCurrency(lineTotal(l), invoiceCurrency) }}</span>
+                </span>
+                <button class="rounded-lg border px-2 py-1 text-xs md:self-end" (click)="deleteLine(idx)">Remove</button>
+              </div>
+            </div>
+            <!-- Global taxes: removed per-line tax toggles -->
+          </div>
+          <button class="rounded-lg border px-3 py-2 text-sm" (click)="addLine()">Add line</button>
+          <div *ngIf="lastDeleted" class="text-xs text-gray-600">
+            Line removed. <button class="underline" (click)="undoDelete()">Undo</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 pt-6 border-t border-gray-200">
+        <div class="flex items-center justify-between">
+          <div class="text-sm font-semibold">Taxes (per invoice)</div>
+        </div>
+        <div class="mt-2 space-y-2">
+          <div *ngFor="let t of invoiceTaxes; let ti = index" class="grid grid-cols-12 gap-2 text-sm items-center">
+            <input [(ngModel)]="t.name" (ngModelChange)="persistDraft()" placeholder="Label (e.g., HST)" class="col-span-6 rounded-xl border px-3 py-2" />
+            <div class="col-span-4 flex items-center">
+              <input type="number" step="0.1" [(ngModel)]="t.ratePct" (ngModelChange)="calculateTotals(); persistDraft()" placeholder="Rate (%)" class="w-full rounded-xl border px-3 py-2" />
+              <span class="ml-2 text-gray-600">%</span>
+            </div>
+            <button class="col-span-2 rounded-lg border px-3 py-2 text-sm" (click)="removeInvoiceTax(ti)">Remove</button>
+          </div>
+          <button class="rounded-lg border px-3 py-2 text-sm" (click)="addInvoiceTax()">Add tax</button>
+          <div class="text-xs text-gray-500">Define taxes for this invoice. Applied globally to the subtotal.</div>
+        </div>
+      </div>
+
+      <div class="mt-6 pt-6 border-t border-gray-200">
+        <div class="text-sm font-semibold">Discounts (per invoice)</div>
+        <div class="mt-2 space-y-2">
+          <div *ngFor="let d of invoiceDiscounts; let di = index" class="grid grid-cols-12 gap-2 text-sm items-center">
+            <input [(ngModel)]="d.name" (ngModelChange)="calculateTotals(); persistDraft()" placeholder="Label (e.g., Discount)" class="col-span-5 rounded-xl border px-3 py-2" />
+            <select [(ngModel)]="d.type" (change)="calculateTotals(); persistDraft()" class="col-span-3 rounded-xl border px-3 py-2">
+              <option value="percent">Percent (%)</option>
+              <option value="amount">Amount</option>
+            </select>
+            <div class="col-span-2 flex items-center">
+              <input type="number" step="0.1" [(ngModel)]="d.value" (input)="calculateTotals(); persistDraft()" class="w-full rounded-xl border px-3 py-2" />
+              <span class="ml-2 text-gray-600" *ngIf="d.type === 'percent'">%</span>
+            </div>
+            <button class="col-span-2 rounded-lg border px-3 py-2 text-sm" (click)="removeInvoiceDiscount(di)">Remove</button>
+          </div>
+          <button class="rounded-lg border px-3 py-2 text-sm" (click)="addInvoiceDiscount()">Add discount</button>
+          <div class="text-xs text-gray-500">Discounts applied after tax.</div>
+        </div>
+      </div>
+
+      <!-- Reset from template action (affects both taxes and discounts) -->
+      <div class="mt-3 text-xs text-gray-600">
+        Need defaults? <button class="underline" (click)="resetFromTemplate()">Reset taxes & discounts from template</button>
+      </div>
+
+      <!-- Footer content is configured in Invoice Settings (company info) -->
+
+      
+    </div>
+    <aside class="rounded-2xl border bg-white p-6">
+      <div class="text-sm font-semibold">Summary</div>
+      <div class="mt-3 space-y-1 text-sm">
+        <div class="flex justify-between">
+          <span>Subtotal</span>
+          <span>{{ settingsService.formatCurrency(subtotal, invoiceCurrency) }}</span>
+        </div>
+        <div *ngFor="let t of perTaxTotals" class="flex justify-between text-gray-600">
+          <span>{{ t.name }} ({{ t.ratePct }}%)</span>
+          <span>{{ settingsService.formatCurrency(t.amount, invoiceCurrency) }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span>Tax</span>
+          <span>{{ settingsService.formatCurrency(tax, invoiceCurrency) }}</span>
+        </div>
+        <div *ngFor="let d of perDiscountTotals; let di = index" class="flex justify-between text-rose-700">
+          <span>
+            {{ invoiceDiscounts[di].type === 'percent'
+              ? (d.name + ' (' + (invoiceDiscounts[di].value || 0) + '%)')
+              : (d.name + ' (' + settingsService.formatCurrency(invoiceDiscounts[di].value || 0, invoiceCurrency) + ')')
+            }}
+          </span>
+          <span>-{{ settingsService.formatCurrency(d.amount, invoiceCurrency) }}</span>
+        </div>
+        <div *ngIf="discountTotal > 0" class="flex justify-between text-rose-700">
+          <span>Discounts total</span>
+          <span>-{{ settingsService.formatCurrency(discountTotal, invoiceCurrency) }}</span>
+        </div>
+        <div class="flex justify-between font-medium">
+          <span>Total</span>
+          <span>{{ settingsService.formatCurrency(total, invoiceCurrency) }}</span>
+        </div>
+      </div>
+      <div class="mt-4 flex flex-col gap-2">
+        <button (click)="openPreview()" class="rounded-xl border px-3 py-2 text-sm">Preview</button>
+        <button (click)="saveInvoice()" class="rounded-xl bg-slate-900 text-white px-3 py-2 text-sm">Issue invoice</button>
+        <button (click)="downloadInvoice()" class="rounded-xl border px-3 py-2 text-sm">Download</button>
+        <button (click)="issueAndSend()" class="rounded-xl border px-3 py-2 text-sm">Issue & send</button>
+        <button (click)="onDone()" class="rounded-xl border px-3 py-2 text-sm">
+          Back to list
+        </button>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Preview modal -->
+  <app-invoice-preview-modal *ngIf="showPreview" (close)="closePreview()">
+    <div class="flex items-center justify-between mb-4">
+      <div class="text-sm font-semibold">Invoice preview</div>
+      <button class="rounded-lg border px-3 py-1.5 text-xs" (click)="closePreview()">Close</button>
+    </div>
+    <app-invoice-preview [invoice]="previewInvoiceData"></app-invoice-preview>
+  </app-invoice-preview-modal>
+</div>
+

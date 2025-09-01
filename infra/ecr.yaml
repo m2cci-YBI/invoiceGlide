@@ -1,0 +1,31 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: ECR repositories for microservices
+
+Resources:
+  AdminRepo:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: admin-service
+  InvoiceRepo:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: invoice-service
+  MailingRepo:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: mailing-service
+
+Outputs:
+  AdminRepoUri:
+    Value: !GetAtt AdminRepo.RepositoryUri
+    Export:
+      Name: !Sub "${AWS::StackName}:AdminRepoUri"
+  InvoiceRepoUri:
+    Value: !GetAtt InvoiceRepo.RepositoryUri
+    Export:
+      Name: !Sub "${AWS::StackName}:InvoiceRepoUri"
+  MailingRepoUri:
+    Value: !GetAtt MailingRepo.RepositoryUri
+    Export:
+      Name: !Sub "${AWS::StackName}:MailingRepoUri"
+

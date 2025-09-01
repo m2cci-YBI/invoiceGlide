@@ -1,0 +1,208 @@
+openapi: 3.0.3
+info:
+  title: Invoice Service API
+  version: 1.0.0
+servers:
+  - url: /api/invoice/v1
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Client:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        email: { type: string, format: email }
+        phone: { type: string }
+        currency: { type: string }
+        region: { type: string }
+        archived: { type: boolean }
+    Invoice:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        number: { type: string }
+        clientId: { type: string, format: uuid }
+        clientName: { type: string }
+        clientEmail: { type: string, format: email }
+        issueDate: { type: string, format: date }
+        dueDate: { type: string, format: date }
+        currency: { type: string }
+        subtotal: { type: number }
+        taxTotal: { type: number }
+        discountTotal: { type: number }
+        total: { type: number }
+        status: { type: string, enum: [DRAFT, OPEN, OVERDUE, COLLECTED, CANCELED] }
+    CreateClientRequest:
+      type: object
+      required: [name, email, currency]
+      properties:
+        name: { type: string }
+        email: { type: string, format: email }
+        phone: { type: string }
+        currency: { type: string }
+        region: { type: string }
+    CreateInvoiceRequest:
+      type: object
+      required: [clientId, issueDate, dueDate, currency, lines]
+      properties:
+        clientId: { type: string, format: uuid }
+        issueDate: { type: string, format: date }
+        dueDate: { type: string, format: date }
+        currency: { type: string }
+        lines:
+          type: array
+          items:
+            type: object
+            properties:
+              description: { type: string }
+              qty: { type: number }
+              unit: { type: string }
+              unitPrice: { type: number }
+        taxes:
+          type: array
+          items:
+            type: object
+            properties:
+              name: { type: string }
+              ratePct: { type: number }
+        discounts:
+          type: array
+          items:
+            type: object
+            properties:
+              name: { type: string }
+              type: { type: string, enum: [percent, amount] }
+              value: { type: number }
+    StatusChangeRequest:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, enum: [OPEN, OVERDUE, COLLECTED, CANCELED] }
+
+paths:
+  /clients:
+    get:
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: query
+          name: query
+          schema: { type: string }
+        - in: query
+          name: archived
+          schema: { type: boolean }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Client' }
+    post:
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateClientRequest' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Client' }
+  /clients/{id}:
+    get:
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Client' }
+  /invoices:
+    get:
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: query
+          name: status
+          schema: { type: string }
+        - in: query
+          name: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Invoice' }
+    post:
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateInvoiceRequest' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Invoice' }
+  /invoices/{id}:
+    get:
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Invoice' }
+  /invoices/{id}/status:
+    post:
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/StatusChangeRequest' }
+      responses:
+        '200': { description: OK }
+  /invoices/{id}/pdf:
+    get:
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: PDF content
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary

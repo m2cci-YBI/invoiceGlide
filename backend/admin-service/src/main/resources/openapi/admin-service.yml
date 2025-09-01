@@ -1,0 +1,254 @@
+openapi: 3.0.3
+info:
+  title: Admin Service API
+  version: 1.0.0
+servers:
+  - url: /api/v1
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    RegisterRequest:
+      type: object
+      required: [email, password, name]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, minLength: 8 }
+        name: { type: string }
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string }
+    TokenResponse:
+      type: object
+      properties:
+        accessToken: { type: string }
+        refreshToken: { type: string }
+        tokenType: { type: string, example: Bearer }
+        expiresIn: { type: integer, format: int64 }
+    RefreshRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken: { type: string }
+    UserProfile:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        name: { type: string }
+        role: { type: string, enum: [USER, ADMIN] }
+    Plan:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        code: { type: string }
+        name: { type: string }
+        priceCents: { type: integer }
+        currency: { type: string, example: USD }
+        interval: { type: string, enum: [MONTH, YEAR] }
+        trialDays: { type: integer }
+        active: { type: boolean }
+        featuresJson: { type: string }
+    CreatePlanRequest:
+      type: object
+      required: [code, name]
+      properties:
+        code: { type: string }
+        name: { type: string }
+        priceCents: { type: integer }
+        currency: { type: string }
+        interval: { type: string, enum: [MONTH, YEAR] }
+        trialDays: { type: integer }
+        active: { type: boolean }
+        featuresJson: { type: string }
+        stripePriceId: { type: string }
+    Subscription:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        userId: { type: string, format: uuid }
+        planCode: { type: string }
+        status: { type: string, enum: [TRIALING, ACTIVE, PAST_DUE, CANCELED, EXPIRED] }
+        startAt: { type: string, format: date-time }
+        trialEndAt: { type: string, format: date-time, nullable: true }
+        currentPeriodEnd: { type: string, format: date-time, nullable: true }
+        daysLeft: { type: integer, nullable: true }
+    SubscribeRequest:
+      type: object
+      required: [planCode]
+      properties:
+        planCode: { type: string }
+    CheckoutResponse:
+      type: object
+      properties:
+        checkoutUrl: { type: string }
+    PortalResponse:
+      type: object
+      properties:
+        url: { type: string }
+
+paths:
+  /auth/register:
+    post:
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegisterRequest' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TokenResponse' }
+  /auth/login:
+    post:
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TokenResponse' }
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RefreshRequest' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TokenResponse' }
+  /auth/logout:
+    post:
+      tags: [Auth]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '204':
+          description: No Content
+
+  /users/me:
+    get:
+      tags: [Users]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserProfile' }
+
+  /plans:
+    get:
+      tags: [Plans]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Plan' }
+    post:
+      tags: [Plans]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreatePlanRequest' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Plan' }
+
+  /subscriptions/me:
+    get:
+      tags: [Subscriptions]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Subscription' }
+  /subscriptions:
+    post:
+      tags: [Subscriptions]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SubscribeRequest' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Subscription'
+                  - $ref: '#/components/schemas/CheckoutResponse'
+  /subscriptions/change-plan:
+    post:
+      tags: [Subscriptions]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SubscribeRequest' }
+      responses:
+        '200':
+          description: OK
+  /subscriptions/cancel:
+    post:
+      tags: [Subscriptions]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '204':
+          description: No Content
+
+  /billing/portal-session:
+    post:
+      tags: [Billing]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PortalResponse' }
+  /billing/webhook:
+    post:
+      tags: [Billing]
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '204':
+          description: No Content

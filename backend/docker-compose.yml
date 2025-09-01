@@ -1,0 +1,108 @@
+version: '3.9'
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: invoicedb
+      POSTGRES_USER: invoice
+      POSTGRES_PASSWORD: invoice
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U invoice -d invoicedb"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - invoice-net
+
+  admin-service:
+    build:
+      context: .
+      dockerfile: admin-service/Dockerfile
+    environment:
+      - DB_URL=${DB_URL}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_ACCESS_TTL=${JWT_ACCESS_TTL}
+      - JWT_REFRESH_TTL=${JWT_REFRESH_TTL}
+      - APP_BASE_URL=${APP_BASE_URL}
+      - SEED_USER_EMAIL=${SEED_USER_EMAIL}
+      - SEED_USER_PASSWORD=${SEED_USER_PASSWORD}
+      - SEED_USER_NAME=${SEED_USER_NAME}
+      - MAILING_BASE_URL=${MAILING_BASE_URL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8081:8081"
+    networks:
+      - invoice-net
+
+  gateway:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+    depends_on:
+      - admin-service
+    ports:
+      - "8088:8080"
+    networks:
+      - invoice-net
+
+  invoice-service:
+    build:
+      context: .
+      dockerfile: invoice-service/Dockerfile
+    environment:
+      - DB_URL=${DB_URL}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - JWT_SECRET=${JWT_SECRET}
+      - ADMIN_BASE_URL=http://admin-service:8081
+      - SEED_USER_EMAIL=${SEED_USER_EMAIL}
+      - SEED_USER_PASSWORD=${SEED_USER_PASSWORD}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      admin-service:
+        condition: service_started
+    ports:
+      - "8082:8082"
+    networks:
+      - invoice-net
+
+  mailing-service:
+    build:
+      context: .
+      dockerfile: mailing-service/Dockerfile
+    environment:
+      - MAILTRAP_API_TOKEN=${MAILTRAP_API_TOKEN}
+      - SMTP_FROM=${SMTP_FROM}
+      - INVOICE_API_BASE=${INVOICE_API_BASE}
+      - APP_BASE_URL=${APP_BASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - DB_URL=${DB_URL}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - ATTACH_PDF=${ATTACH_PDF}
+      - MAILTRAP_API_URL=${MAILTRAP_API_URL}
+    depends_on:
+      - invoice-service
+    ports:
+      - "8083:8083"
+    networks:
+      - invoice-net
+
+volumes:
+  pgdata: {}
+
+networks:
+  invoice-net:
+    driver: bridge

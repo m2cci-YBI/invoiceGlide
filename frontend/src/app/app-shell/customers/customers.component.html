@@ -1,0 +1,69 @@
+<div class="mx-auto max-w-7xl py-8">
+  <div class="flex items-start justify-between">
+    <div>
+      <h1 class="text-2xl font-semibold tracking-tight">Clients</h1>
+      <p class="mt-1 text-sm text-gray-600">Manage billing contacts and regional tax schemes.</p>
+    </div>
+    <button (click)="openNew()" class="btn-primary">New client</button>
+  </div>
+
+  <div class="mt-4">
+    <input
+      [(ngModel)]="query"
+      (ngModelChange)="filterCustomers()"
+      placeholder="Search by name or email…"
+      class="input"
+    />
+  </div>
+
+  <div class="mt-4 grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div *ngFor="let c of filteredCustomers" class="card">
+      <div class="font-medium">{{ c.name }}</div>
+      <div class="text-xs text-gray-500">{{ c.email }}</div>
+      <div class="mt-2 text-xs">
+        Phone: <span class="font-medium">{{ c.phone || '—' }}</span> • Currency: {{ c.currency }}
+      </div>
+      <div class="mt-1 text-sm">
+        Open: <span class="font-medium">{{ dataService.currency(c.openAmount, c.currency) }}</span>
+      </div>
+      <div class="mt-1 text-sm">
+        Paid: <span class="font-medium">{{ dataService.currency(c.paidAmount, c.currency) }}</span>
+      </div>
+      <div class="mt-1 text-sm">
+        Overdue: <span class="font-medium">{{ dataService.currency(c.overdueAmount, c.currency) }}</span>
+      </div>
+      <div class="mt-3 flex items-center gap-2">
+        <button class="btn-ghost" (click)="openEdit(c)">Edit</button>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="filteredCustomers?.length === 0" class="mt-6 card text-center text-sm text-slate-600">
+    <div>No clients match your search.</div>
+    <div class="mt-2">
+      <button class="btn-ghost" (click)="openNew()">Add your first client</button>
+    </div>
+  </div>
+
+  <!-- Modal-like inline form -->
+  <div *ngIf="showForm" class="fixed inset-0 bg-black/30 flex items-center justify-center p-4">
+    <div class="w-full max-w-lg card">
+      <div class="text-sm font-semibold">{{ editing?.id ? 'Edit client' : 'New client' }}</div>
+      <div class="mt-3 grid sm:grid-cols-2 gap-3 text-sm">
+        <input [(ngModel)]="editing.name" placeholder="Name" class="input sm:col-span-2" />
+        <input [(ngModel)]="editing.email" #emailsCtrl="ngModel" placeholder="Billing emails (comma-separated)" class="input sm:col-span-2"
+               required [pattern]="'^\\s*([^\\s@]+@[^\\s@]+\\.[^\\s@]+)(\\s*,\\s*[^\\s@]+@[^\\s@]+\\.[^\\s@]+)*\\s*$'" />
+        <div class="text-xs text-rose-600 sm:col-span-2" *ngIf="emailsCtrl.invalid && (emailsCtrl.dirty || emailsCtrl.touched)">
+          Enter one or more valid emails, separated by commas.
+        </div>
+        <input [(ngModel)]="editing.phone" placeholder="Phone number" class="input" />
+        <input [(ngModel)]="editing.currency" placeholder="Currency (e.g., CAD)" class="input" />
+        <textarea [(ngModel)]="editing.address" placeholder="Address (optional)" class="textarea sm:col-span-2"></textarea>
+      </div>
+      <div class="mt-4 flex items-center gap-2 justify-end">
+        <button class="btn-ghost" (click)="cancelForm()">Cancel</button>
+        <button class="btn-primary" (click)="saveCustomer()" [disabled]="emailsCtrl?.invalid || !editing?.name || !editing?.currency">Save</button>
+      </div>
+      </div>
+  </div>
+</div>

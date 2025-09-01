@@ -1,0 +1,325 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: VPC, subnets, routing, SGs, Cloud Map namespace, and internal NLB/TGs for ECS services
+
+Parameters:
+  VpcCidr:
+    Type: String
+    Default: 10.0.0.0/16
+  PublicSubnet1Cidr:
+    Type: String
+    Default: 10.0.0.0/24
+  PublicSubnet2Cidr:
+    Type: String
+    Default: 10.0.1.0/24
+  PrivateAppSubnet1Cidr:
+    Type: String
+    Default: 10.0.10.0/24
+  PrivateAppSubnet2Cidr:
+    Type: String
+    Default: 10.0.11.0/24
+  PrivateDbSubnet1Cidr:
+    Type: String
+    Default: 10.0.20.0/24
+  PrivateDbSubnet2Cidr:
+    Type: String
+    Default: 10.0.21.0/24
+  NamespaceName:
+    Type: String
+    Default: invoice.local
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCidr
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+
+  IGW:
+    Type: AWS::EC2::InternetGateway
+
+  IGWAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref IGW
+
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PublicSubnet1Cidr
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select [0, !GetAZs '']
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PublicSubnet2Cidr
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select [1, !GetAZs '']
+
+  PrivateAppSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateAppSubnet1Cidr
+      MapPublicIpOnLaunch: false
+      AvailabilityZone: !Select [0, !GetAZs '']
+
+  PrivateAppSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateAppSubnet2Cidr
+      MapPublicIpOnLaunch: false
+      AvailabilityZone: !Select [1, !GetAZs '']
+
+  PrivateDbSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateDbSubnet1Cidr
+      MapPublicIpOnLaunch: false
+      AvailabilityZone: !Select [0, !GetAZs '']
+
+  PrivateDbSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateDbSubnet2Cidr
+      MapPublicIpOnLaunch: false
+      AvailabilityZone: !Select [1, !GetAZs '']
+
+  NatEip:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+
+  NatGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatEip.AllocationId
+      SubnetId: !Ref PublicSubnet1
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref IGW
+
+  PublicSubnet1Assoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicRouteTable
+
+  PublicSubnet2Assoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref PublicRouteTable
+
+  PrivateAppRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+
+  PrivateAppRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateAppRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway
+
+  PrivateAppSubnet1Assoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateAppSubnet1
+      RouteTableId: !Ref PrivateAppRouteTable
+
+  PrivateAppSubnet2Assoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateAppSubnet2
+      RouteTableId: !Ref PrivateAppRouteTable
+
+  PrivateDbRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+
+  PrivateDbSubnet1Assoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateDbSubnet1
+      RouteTableId: !Ref PrivateDbRouteTable
+
+  PrivateDbSubnet2Assoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateDbSubnet2
+      RouteTableId: !Ref PrivateDbRouteTable
+
+  EcsSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: ECS tasks SG
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: -1
+          SourceSecurityGroupId: !Ref EcsSecurityGroup
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+
+  RdsSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: RDS SG
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          SourceSecurityGroupId: !Ref EcsSecurityGroup
+
+  PrivateDnsNamespace:
+    Type: AWS::ServiceDiscovery::PrivateDnsNamespace
+    Properties:
+      Name: !Ref NamespaceName
+      Vpc: !Ref VPC
+      Description: Private namespace for ECS services
+
+  InternalNLB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: network
+      Scheme: internal
+      Subnets:
+        - !Ref PrivateAppSubnet1
+        - !Ref PrivateAppSubnet2
+
+  TGAAdmin:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      VpcId: !Ref VPC
+      TargetType: ip
+      Port: 8081
+      Protocol: TCP
+
+  TGAInvoice:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      VpcId: !Ref VPC
+      TargetType: ip
+      Port: 8082
+      Protocol: TCP
+
+  TGAMailing:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      VpcId: !Ref VPC
+      TargetType: ip
+      Port: 8083
+      Protocol: TCP
+
+  Listener8081:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref InternalNLB
+      Port: 8081
+      Protocol: TCP
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref TGAAdmin
+
+  Listener8082:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref InternalNLB
+      Port: 8082
+      Protocol: TCP
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref TGAInvoice
+
+  Listener8083:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref InternalNLB
+      Port: 8083
+      Protocol: TCP
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref TGAMailing
+
+Outputs:
+  VpcId:
+    Value: !Ref VPC
+    Export:
+      Name: !Sub "${AWS::StackName}:VpcId"
+  PublicSubnets:
+    Value: !Join [",", [!Ref PublicSubnet1, !Ref PublicSubnet2]]
+    Export:
+      Name: !Sub "${AWS::StackName}:PublicSubnets"
+  PrivateAppSubnets:
+    Value: !Join [",", [!Ref PrivateAppSubnet1, !Ref PrivateAppSubnet2]]
+    Export:
+      Name: !Sub "${AWS::StackName}:PrivateAppSubnets"
+  PrivateDbSubnets:
+    Value: !Join [",", [!Ref PrivateDbSubnet1, !Ref PrivateDbSubnet2]]
+    Export:
+      Name: !Sub "${AWS::StackName}:PrivateDbSubnets"
+  EcsSecurityGroupId:
+    Value: !Ref EcsSecurityGroup
+    Export:
+      Name: !Sub "${AWS::StackName}:EcsSecurityGroupId"
+  RdsSecurityGroupId:
+    Value: !Ref RdsSecurityGroup
+    Export:
+      Name: !Sub "${AWS::StackName}:RdsSecurityGroupId"
+  NamespaceId:
+    Value: !Ref PrivateDnsNamespace
+    Export:
+      Name: !Sub "${AWS::StackName}:NamespaceId"
+  NamespaceNameOut:
+    Value: !Ref NamespaceName
+    Export:
+      Name: !Sub "${AWS::StackName}:NamespaceName"
+  NlbArn:
+    Value: !Ref InternalNLB
+    Export:
+      Name: !Sub "${AWS::StackName}:NlbArn"
+  ListenerArn8081:
+    Value: !Ref Listener8081
+    Export:
+      Name: !Sub "${AWS::StackName}:ListenerArn8081"
+  ListenerArn8082:
+    Value: !Ref Listener8082
+    Export:
+      Name: !Sub "${AWS::StackName}:ListenerArn8082"
+  ListenerArn8083:
+    Value: !Ref Listener8083
+    Export:
+      Name: !Sub "${AWS::StackName}:ListenerArn8083"
+  TgaAdminArn:
+    Value: !Ref TGAAdmin
+    Export:
+      Name: !Sub "${AWS::StackName}:TgaAdminArn"
+  TgaInvoiceArn:
+    Value: !Ref TGAInvoice
+    Export:
+      Name: !Sub "${AWS::StackName}:TgaInvoiceArn"
+  TgaMailingArn:
+    Value: !Ref TGAMailing
+    Export:
+      Name: !Sub "${AWS::StackName}:TgaMailingArn"
+

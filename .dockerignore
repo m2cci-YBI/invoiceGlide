@@ -1,0 +1,11 @@
+# Global ignore for UI build context
+.git
+.gitignore
+.angular
+node_modules
+dist
+errors.txt
+backend
+.env
+**/.DS_Store
+

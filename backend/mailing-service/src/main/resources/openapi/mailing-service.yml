@@ -1,0 +1,185 @@
+openapi: 3.0.3
+info:
+  title: Mailing Service API
+  version: 1.0.0
+servers:
+  - url: /api/mail/v1
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    SendRequest:
+      type: object
+      required: [invoiceId]
+      properties:
+        invoiceId: { type: string, format: uuid }
+        to: { type: string, format: email }
+    SendTestRequest:
+      type: object
+      required: [to]
+      properties:
+        to: { type: string, format: email }
+        templateId: { type: string }
+    SendResponse:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        status: { type: string, enum: [SENT, FAILED] }
+    Template:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        subject: { type: string }
+        bodyHtml: { type: string }
+    RenderRequest:
+      type: object
+      required: [templateId]
+      properties:
+        templateId: { type: string }
+        model:
+          type: object
+          additionalProperties: true
+    MailSend:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        createdAt: { type: string, format: date-time }
+        to: { type: string }
+        subject: { type: string }
+        templateType: { type: string, enum: [INVOICE, REMINDER, RECEIPT] }
+        status: { type: string }
+        providerMsgId: { type: string }
+        errorMsg: { type: string }
+        invoiceId: { type: string, format: uuid }
+        clientId: { type: string, format: uuid }
+paths:
+  /send/test:
+    post:
+      summary: Send a test email
+      operationId: sendTest
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SendTestRequest' }
+      responses:
+        '200':
+          description: Accepted
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SendResponse' }
+  /send/invoice:
+    post:
+      summary: Send invoice email
+      operationId: sendInvoice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SendRequest' }
+      responses:
+        '200':
+          description: Accepted
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SendResponse' }
+  /send/reminder:
+    post:
+      summary: Send reminder email
+      operationId: sendReminder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SendRequest' }
+      responses:
+        '200':
+          description: Accepted
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SendResponse' }
+  /templates:
+    get:
+      summary: List templates
+      operationId: listTemplates
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Template' }
+  /templates/{id}:
+    get:
+      summary: Get template
+      operationId: getTemplate
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Template' }
+    put:
+      summary: Update template
+      operationId: updateTemplate
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Template' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Template' }
+  /templates/render:
+    post:
+      summary: Render a template with a model
+      operationId: renderTemplate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RenderRequest' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  html: { type: string }
+  /sends:
+    get:
+      summary: List recent email sends
+      operationId: listSends
+      parameters:
+        - in: query
+          name: invoiceId
+          required: false
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/MailSend' }

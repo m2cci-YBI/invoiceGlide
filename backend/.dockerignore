@@ -1,0 +1,9 @@
+.git
+.idea
+target
+**/.DS_Store
+.env
+docker-compose.yml
+**/node_modules
+**/dist
+

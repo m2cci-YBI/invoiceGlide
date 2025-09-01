@@ -1,0 +1,231 @@
+<div class="mx-auto max-w-7xl py-8">
+  <div class="flex items-start justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-semibold tracking-tight">Welcome to InvoiceGlide</h1>
+      <p class="mt-1 text-sm text-gray-600">Get set up in minutes. Create, send, and get paid faster.</p>
+    </div>
+    <div class="hidden sm:flex items-center gap-2">
+      <button (click)="skip()" class="rounded-xl border px-4 py-2 text-sm">Skip for now</button>
+    </div>
+  </div>
+
+  <div class="mt-4 rounded-2xl border bg-white p-4 shadow-sm">
+    <!-- Stepper -->
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div *ngFor="let s of slides; let i = index" class="flex items-center">
+          <div class="flex items-center justify-center h-7 w-7 rounded-full border"
+               [ngClass]="{ 'bg-slate-900 text-white border-slate-900': i === activeIndex, 'bg-white text-slate-600 border-slate-300': i !== activeIndex, 'opacity-70': i > activeIndex }">
+            {{ i + 1 }}
+          </div>
+          <div *ngIf="i < slides.length - 1" class="h-px w-8 bg-slate-200 mx-2"></div>
+        </div>
+      </div>
+      <div class="text-sm text-gray-600">{{ slides[activeIndex].subtitle }}</div>
+    </div>
+    <div class="mt-3 h-1 w-full bg-slate-100 rounded-full overflow-hidden">
+      <div class="h-full bg-slate-900" [style.width.%]="progressPct"></div>
+    </div>
+
+    <div class="mt-4 grid lg:grid-cols-3 gap-4 items-stretch">
+      <!-- Left: instructions -->
+      <div class="rounded-xl border bg-white p-5 lg:col-span-1">
+        <div class="text-xl font-semibold tracking-tight">{{ slides[activeIndex].title }}</div>
+        <p class="mt-2 text-sm text-gray-600">{{ slides[activeIndex].description }}</p>
+        <ul class="mt-3 space-y-2 text-sm text-gray-700">
+          <li *ngFor="let tip of slides[activeIndex].tips" class="flex items-start gap-2">
+            <span class="mt-1 h-1.5 w-1.5 rounded-full bg-slate-900"></span>
+            <span>{{ tip }}</span>
+          </li>
+        </ul>
+        <div class="mt-4 flex items-center gap-2">
+          <a [routerLink]="slides[activeIndex].ctaLink" class="btn-primary">{{ slides[activeIndex].ctaLabel }}</a>
+          <button class="btn-ghost" (click)="next()" [disabled]="isLast">Next</button>
+        </div>
+      </div>
+
+      <!-- Middle/Right: preview -->
+      <div class="rounded-xl border bg-white overflow-hidden shadow-sm lg:col-span-2">
+        <div class="h-9 bg-slate-900/90 text-slate-200 text-xs flex items-center gap-1 px-3">
+          <div class="h-2 w-2 bg-red-400 rounded-full"></div>
+          <div class="h-2 w-2 bg-yellow-400 rounded-full"></div>
+          <div class="h-2 w-2 bg-green-400 rounded-full"></div>
+          <span class="ml-2">Preview — {{ slides[activeIndex].previewLabel }}</span>
+        </div>
+        <div class="h-56 md:h-64 bg-slate-50 text-sm text-gray-700">
+          <div class="w-full h-full p-4 overflow-auto" [ngSwitch]="activeIndex">
+            <div *ngSwitchCase="0" class="max-w-2xl">
+              <div class="text-base font-medium">Invoice settings</div>
+              <div class="mt-3 grid sm:grid-cols-2 gap-3">
+                <label class="grid text-xs">
+                  <span class="text-gray-500">Company name</span>
+                  <input class="mt-1 rounded-lg border px-3 py-2" value="Acme, Inc." disabled>
+                </label>
+                <label class="grid text-xs">
+                  <span class="text-gray-500">Currency</span>
+                  <input class="mt-1 rounded-lg border px-3 py-2" value="USD" disabled>
+                </label>
+                <label class="grid text-xs">
+                  <span class="text-gray-500">Numbering</span>
+                  <input class="mt-1 rounded-lg border px-3 py-2" value="INV-{YYYY}-{####}" disabled>
+                </label>
+                <label class="grid text-xs">
+                  <span class="text-gray-500">Tax policy</span>
+                  <input class="mt-1 rounded-lg border px-3 py-2" value="Choose per invoice/line" disabled>
+                </label>
+              </div>
+              <div class="mt-3 rounded-xl border bg-white p-3">
+                <div class="text-xs font-medium">Template preview</div>
+                <div class="mt-2 h-28 bg-slate-100 rounded"></div>
+              </div>
+            </div>
+
+            <div *ngSwitchCase="1" class="max-w-3xl">
+              <div class="flex items-center justify-between">
+                <div class="text-base font-medium">Clients</div>
+                <div class="text-xs text-gray-500">Search • Filter</div>
+              </div>
+              <div class="mt-2 rounded-xl overflow-hidden border bg-white">
+                <table class="w-full text-xs">
+                  <thead class="bg-slate-50 text-gray-500">
+                    <tr>
+                      <th class="text-left px-3 py-2">Client</th>
+                      <th class="text-left px-3 py-2">Open</th>
+                      <th class="text-left px-3 py-2">Paid</th>
+                      <th class="text-left px-3 py-2">Overdue</th>
+                      <th class="px-3 py-2"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr class="border-t">
+                      <td class="px-3 py-2">Acme Corp</td>
+                      <td class="px-3 py-2">$1,200</td>
+                      <td class="px-3 py-2">$8,450</td>
+                      <td class="px-3 py-2"><span class="rounded-full bg-amber-100 text-amber-700 px-2 py-0.5">$0</span></td>
+                      <td class="px-3 py-2 text-right"><span class="text-slate-400">⋯</span></td>
+                    </tr>
+                    <tr class="border-t">
+                      <td class="px-3 py-2">Northwind</td>
+                      <td class="px-3 py-2">$0</td>
+                      <td class="px-3 py-2">$5,210</td>
+                      <td class="px-3 py-2"><span class="rounded-full bg-rose-100 text-rose-700 px-2 py-0.5">$300</span></td>
+                      <td class="px-3 py-2 text-right"><span class="text-slate-400">⋯</span></td>
+                    </tr>
+                    <tr class="border-t">
+                      <td class="px-3 py-2">Globex</td>
+                      <td class="px-3 py-2">$750</td>
+                      <td class="px-3 py-2">$2,000</td>
+                      <td class="px-3 py-2"><span class="rounded-full bg-amber-100 text-amber-700 px-2 py-0.5">$0</span></td>
+                      <td class="px-3 py-2 text-right"><span class="text-slate-400">⋯</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div *ngSwitchCase="2" class="max-w-3xl">
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="text-base font-medium">Invoice INV-2025-0007</div>
+                  <div class="text-xs text-gray-500">Client: Acme Corp</div>
+                </div>
+                <span class="rounded-full bg-emerald-100 text-emerald-700 text-xs px-2 py-0.5">Draft</span>
+              </div>
+              <div class="mt-2 rounded-xl overflow-hidden border bg-white">
+                <table class="w-full text-xs">
+                  <thead class="bg-slate-50 text-gray-500">
+                    <tr>
+                      <th class="text-left px-3 py-2">Item</th>
+                      <th class="text-right px-3 py-2">Qty</th>
+                      <th class="text-right px-3 py-2">Price</th>
+                      <th class="text-right px-3 py-2">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr class="border-t">
+                      <td class="px-3 py-2">Design work</td>
+                      <td class="px-3 py-2 text-right">10</td>
+                      <td class="px-3 py-2 text-right">$80.00</td>
+                      <td class="px-3 py-2 text-right">$800.00</td>
+                    </tr>
+                    <tr class="border-t">
+                      <td class="px-3 py-2">Development</td>
+                      <td class="px-3 py-2 text-right">6</td>
+                      <td class="px-3 py-2 text-right">$120.00</td>
+                      <td class="px-3 py-2 text-right">$720.00</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="mt-2 flex items-center justify-end gap-4 text-xs">
+                <div>Subtotal: <span class="font-medium">$1,520.00</span></div>
+                <div>Tax (HST 13%): <span class="font-medium">$197.60</span></div>
+                <div>Total: <span class="font-semibold">$1,717.60</span></div>
+              </div>
+              <div class="mt-3 flex items-center justify-end">
+                <button class="rounded-lg bg-slate-900/10 text-slate-700 px-3 py-1.5 text-xs" disabled>Send invoice</button>
+              </div>
+            </div>
+
+            <div *ngSwitchCase="3" class="max-w-4xl">
+              <div class="grid sm:grid-cols-3 gap-3">
+                <div class="rounded-xl border bg-white p-3">
+                  <div class="text-xs text-gray-500">Issued</div>
+                  <div class="mt-1 text-lg font-semibold">$3,200</div>
+                </div>
+                <div class="rounded-xl border bg-white p-3">
+                  <div class="text-xs text-gray-500">Paid</div>
+                  <div class="mt-1 text-lg font-semibold text-emerald-700">$9,650</div>
+                </div>
+                <div class="rounded-xl border bg-white p-3">
+                  <div class="text-xs text-gray-500">Overdue</div>
+                  <div class="mt-1 text-lg font-semibold text-rose-700">$300</div>
+                </div>
+              </div>
+              <div class="mt-3 h-28 bg-slate-100 rounded-xl grid place-items-center text-xs text-gray-500">Collections chart (6 months)</div>
+              <div class="mt-3 rounded-xl border bg-white p-3">
+                <div class="text-xs font-medium">Reminders</div>
+                <div class="mt-2 flex items-center gap-2 text-xs text-gray-600">
+                  <span class="rounded-full bg-slate-200 px-2 py-0.5">T‑3</span>
+                  <span class="rounded-full bg-slate-200 px-2 py-0.5">T+0</span>
+                  <span class="rounded-full bg-slate-200 px-2 py-0.5">+7</span>
+                  <span class="rounded-full bg-slate-200 px-2 py-0.5">+21</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upgrade motivation (compact) -->
+    <div class="mt-4 space-y-3">
+      <div class="rounded-xl border p-3 bg-white flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="chip-emerald">Pro</span>
+          <span class="text-sm text-gray-700">Unlock reminders, email sending, and sequential numbering.</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button class="btn-primary" (click)="startTrial()">Start 14‑day free trial</button>
+          <button class="btn-ghost" (click)="upgrade()">See plans</button>
+        </div>
+      </div>
+      <div class="rounded-xl border p-4">
+        <div class="text-sm font-semibold">Tips</div>
+        <div class="mt-1 text-xs text-gray-600">You can revisit onboarding anytime under Settings → Onboarding.</div>
+        <div class="mt-2 text-xs text-gray-600">Need help? Check Settings → Mail to set up your email settings before sending.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom nav -->
+  <div class="flex items-center justify-between gap-4 mt-4">
+    <button class="rounded-lg border px-3 py-1.5 text-sm disabled:opacity-40" [disabled]="isFirst" (click)="prev()">Back</button>
+    <div class="text-xs text-gray-500">You’re on step {{ activeIndex + 1 }} of {{ slides.length }}.</div>
+    <div class="flex items-center gap-2">
+      <button class="rounded-lg border px-3 py-1.5 text-sm" (click)="next()" [disabled]="isLast">Next</button>
+      <a routerLink="/dashboard" class="btn-primary" *ngIf="isLast">Finish</a>
+    </div>
+  </div>
+</div>

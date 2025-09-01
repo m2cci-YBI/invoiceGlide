@@ -1,0 +1,45 @@
+server:
+  port: 8083
+  shutdown: graceful
+  forward-headers-strategy: framework
+
+spring:
+  application:
+    name: mailing-service
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASS}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate.jdbc.time_zone: UTC
+    defer-datasource-initialization: true
+  sql:
+    init:
+      mode: always
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+
+mailing:
+  from: ${SMTP_FROM}
+  invoiceApiBaseUrl: ${INVOICE_API_BASE}
+  appBaseUrl: ${APP_BASE_URL}
+  attachPdf: ${ATTACH_PDF}
+  mailtrapApiToken: ${MAILTRAP_API_TOKEN}
+  mailtrapApiUrl: ${MAILTRAP_API_URL}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  level:
+    root: INFO
+
+security:
+  jwt:
+    secret: ${JWT_SECRET}

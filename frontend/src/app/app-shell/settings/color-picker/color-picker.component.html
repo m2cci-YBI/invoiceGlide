@@ -1,0 +1,21 @@
+<div class="relative inline-block">
+  <button type="button" (click)="toggle()" [disabled]="disabled"
+          class="inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm">
+    <span class="inline-block h-4 w-4 rounded" [style.background]="value"></span>
+    <span class="text-xs text-gray-700">{{ value }}</span>
+  </button>
+
+  <div *ngIf="open" class="absolute z-50 mt-2 w-60 rounded-2xl border bg-white p-3 shadow-lg">
+    <div class="grid grid-cols-6 gap-2">
+      <button *ngFor="let c of swatches" type="button" (click)="pick(c)"
+              class="h-7 w-full rounded border" [style.background]="c"
+              [class.ring-2]="c.toLowerCase() === value.toLowerCase()" [class.ring-slate-900]="c.toLowerCase() === value.toLowerCase()"></button>
+    </div>
+    <div class="mt-3 flex items-center gap-2">
+      <span class="text-xs text-gray-600">Hex</span>
+      <input [value]="value" (input)="onHexInput($event)"
+             class="flex-1 rounded-lg border px-2 py-1 text-xs" placeholder="#111827" />
+    </div>
+    <div class="mt-2 text-[10px] text-gray-500">Tip: paste any valid HEX (#RRGGBB) or pick a swatch.</div>
+  </div>
+</div>

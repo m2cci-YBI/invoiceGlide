@@ -1,0 +1,266 @@
+<div class="min-h-screen bg-gradient-to-b from-white to-slate-100 text-slate-900">
+  <!-- Header -->
+  <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-sm border-b">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <img src="assets/logo.png" alt="{{ BRAND }}" class="h-9 w-9 rounded-xl object-cover border" />
+        <span class="font-semibold tracking-tight">{{ BRAND }}</span>
+      </div>
+      <nav class="hidden md:flex items-center gap-6 text-sm">
+        <a href="#features" class="hover:text-gray-900 text-gray-600">Features</a>
+        <a href="#how-it-works" class="hover:text-gray-900 text-gray-600">How it works</a>
+        <a href="#pricing" class="hover:text-gray-900 text-gray-600">Pricing</a>
+        <a routerLink="/auth" [queryParams]="{ mode: 'login' }" class="hover:text-gray-900 text-gray-600">Live demo</a>
+        <a href="#faq" class="hover:text-gray-900 text-gray-600">FAQ</a>
+      </nav>
+      <div class="flex items-center gap-3">
+        <a routerLink="/auth" [queryParams]="{ mode: 'signup' }" class="rounded-xl bg-slate-900 text-white px-4 py-2 text-sm font-medium">Get started free</a>
+        <a routerLink="/auth" [queryParams]="{ mode: 'login' }" class="rounded-xl border px-4 py-2 text-sm font-medium">Log in</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-10 items-center">
+      <div class="lg:col-span-2">
+        <div class="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs text-gray-600 bg-white">
+          Start your 7‑day free trial
+        </div>
+        <h1 class="mt-4 text-4xl sm:text-5xl font-semibold tracking-tight leading-tight">
+          All‑in‑one invoicing platform
+          <br />
+          <span class="text-gray-600">PDFs, email sending, and automated reminders</span>
+        </h1>
+        <div class="mt-2 text-base text-gray-500 italic">Invoices that feel effortless.</div>
+        <p class="mt-4 text-lg text-gray-600">
+          Create and send invoices, export branded PDFs, automate reminders, and track KPIs — with multi‑currency and customizable branding.
+        </p>
+        <div class="mt-6 flex items-center gap-3">
+          <a routerLink="/auth" [queryParams]="{ mode: 'signup' }" class="rounded-xl bg-slate-900 text-white px-4 py-2 text-sm font-medium">Start free trial</a>
+          <a href="#features" class="rounded-xl border px-4 py-2 text-sm font-medium">See features</a>
+        </div>
+      </div>
+      <div class="tilt-scene lg:col-span-3" #tiltScene (mousemove)="onTiltMove($event)" (mouseleave)="onTiltLeave()">
+        <div class="rounded-2xl border bg-white shadow-xl p-4 tilt-card" #tiltCard>
+          <div class="h-10 bg-slate-900/90 flex items-center gap-1 px-3 text-slate-200 text-xs rounded-t-xl -m-4 mb-4">
+            <div class="h-2 w-2 bg-red-400 rounded-full"></div>
+            <div class="h-2 w-2 bg-yellow-400 rounded-full"></div>
+            <div class="h-2 w-2 bg-green-400 rounded-full"></div>
+            <span class="ml-2">{{ DOMAIN }} — Dashboard preview</span>
+          </div>
+          <div class="w-full bg-slate-100 rounded-xl overflow-hidden">
+            <img src="assets/dashboard.png" alt="Dashboard preview" class="w-full h-auto block img-crisp" decoding="async" loading="eager" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features" class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-14">
+    <div class="mx-auto max-w-3xl text-center">
+      <h2 class="text-3xl sm:text-4xl font-semibold tracking-tight">Everything you need to ship invoices</h2>
+      <p class="mt-3 text-lg text-gray-600">Create, send, track, and get paid — with clean PDFs and audit trails.</p>
+    </div>
+    <div class="mt-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="rounded-2xl border bg-white p-6 shadow-sm">
+        <div class="inline-flex items-center gap-2 text-sm font-semibold">
+          <span class="rounded-lg bg-slate-900/5 p-1.5 text-slate-900" aria-hidden="true">
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 3h9a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3Z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+          </span>
+          Create invoices with line items
+        </div>
+        <p class="mt-1 text-sm text-gray-600">Add items with qty & price, per-line taxes, and discounts (percent or fixed). Totals are calculated automatically.</p>
+      </div>
+
+      <div class="rounded-2xl border bg-white p-6 shadow-sm">
+        <div class="inline-flex items-center gap-2 text-sm font-semibold">
+          <span class="rounded-lg bg-slate-900/5 p-1.5 text-slate-900" aria-hidden="true">
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2h8l4 4v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M14 2v6h6"/><path d="M8 14h8M8 17h5"/></svg>
+          </span>
+          PDF export & download
+        </div>
+        <p class="mt-1 text-sm text-gray-600">One‑click PDF with your branding.</p>
+      </div>
+
+      <div class="rounded-2xl border bg-white p-6 shadow-sm">
+        <div class="inline-flex items-center gap-2 text-sm font-semibold">
+          <span class="rounded-lg bg-slate-900/5 p-1.5 text-slate-900" aria-hidden="true">
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+          </span>
+          Invoice list & detail views
+        </div>
+        <p class="mt-1 text-sm text-gray-600">Filter by status (issued/paid/overdue), search by number or client, and open a detail page for any invoice.</p>
+      </div>
+
+      <div class="rounded-2xl border bg-white p-6 shadow-sm">
+        <div class="inline-flex items-center gap-2 text-sm font-semibold">
+          <span class="rounded-lg bg-slate-900/5 p-1.5 text-slate-900" aria-hidden="true">
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z"/><path d="M4 20a8 8 0 0 1 16 0"/></svg>
+          </span>
+          Clients directory (CRUD)
+        </div>
+        <p class="mt-1 text-sm text-gray-600">Add, edit, and search clients. See open, paid, and overdue amounts per client.</p>
+      </div>
+
+      <div class="rounded-2xl border bg-white p-6 shadow-sm">
+        <div class="inline-flex items-center gap-2 text-sm font-semibold">
+          <span class="rounded-lg bg-slate-900/5 p-1.5 text-slate-900" aria-hidden="true">
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3v18h18"/><path d="M7 15l3-3 3 2 4-5"/></svg>
+          </span>
+          Dashboard KPIs & chart
+        </div>
+        <p class="mt-1 text-sm text-gray-600">Overview cards plus a collections line chart for the last 6 months, powered by Chart.js.</p>
+      </div>
+
+      <div class="rounded-2xl border bg-white p-6 shadow-sm">
+        <div class="inline-flex items-center gap-2 text-sm font-semibold">
+          <span class="rounded-lg bg-slate-900/5 p-1.5 text-slate-900" aria-hidden="true">
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3v18M8 7h8M8 12h6M8 17h8"/></svg>
+          </span>
+          Multi‑currency with live FX
+        </div>
+        <p class="mt-1 text-sm text-gray-600">Amounts convert using frankfurter.app exchange rates so your totals are consistent in a base currency.</p>
+      </div>
+
+      <div class="rounded-2xl border bg-white p-6 shadow-sm">
+        <div class="inline-flex items-center gap-2 text-sm font-semibold">
+          <span class="rounded-lg bg-slate-900/5 p-1.5 text-slate-900" aria-hidden="true">
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 20h16"/><path d="M7 20V4h10v16"/><path d="M7 8h10M7 12h10M7 16h6"/></svg>
+          </span>
+          Branded PDF preview
+        </div>
+        <p class="mt-1 text-sm text-gray-600">Add your logo and business details; preview the PDF before sending.</p>
+      </div>
+
+      <div class="rounded-2xl border bg-white p-6 shadow-sm">
+        <div class="inline-flex items-center gap-2 text-sm font-semibold">
+          <span class="rounded-lg bg-slate-900/5 p-1.5 text-slate-900" aria-hidden="true">
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6l8 6 8-6"/><path d="M4 6h16v12H4z"/></svg>
+          </span>
+          Email sending with templates
+        </div>
+        <p class="mt-1 text-sm text-gray-600">Send invoices and reminders by email using ready-made templates.</p>
+      </div>
+
+      <div class="rounded-2xl border bg-white p-6 shadow-sm">
+        <div class="inline-flex items-center gap-2 text-sm font-semibold">
+          <span class="rounded-lg bg-slate-900/5 p-1.5 text-slate-900" aria-hidden="true">
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 7V3m8 4V3"/><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg>
+          </span>
+          Automated reminders & schedules
+        </div>
+        <p class="mt-1 text-sm text-gray-600">Auto‑send T‑3, T+0, +7, and +21 reminders with configurable templates.</p>
+      </div>
+
+      
+      
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section id="how-it-works" class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-14">
+    <div class="mx-auto max-w-3xl text-center">
+      <h2 class="text-3xl sm:text-4xl font-semibold tracking-tight">How it works</h2>
+      <p class="mt-3 text-lg text-gray-600">From draft to paid—on rails</p>
+    </div>
+    <div class="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div class="rounded-2xl border bg-white p-6 shadow-sm">
+        <div class="text-xs font-medium text-gray-500">Step 1</div>
+        <div class="mt-1 text-sm font-semibold">Brand & defaults</div>
+        <p class="mt-1 text-sm text-gray-600">Set company profile, currency, numbering, and email templates.</p>
+      </div>
+      <div class="rounded-2xl border bg-white p-6 shadow-sm">
+        <div class="text-xs font-medium text-gray-500">Step 2</div>
+        <div class="mt-1 text-sm font-semibold">Add customers & items</div>
+        <p class="mt-1 text-sm text-gray-600">Regions auto‑attach taxes; products carry defaults.</p>
+      </div>
+      <div class="rounded-2xl border bg-white p-6 shadow-sm">
+        <div class="text-xs font-medium text-gray-500">Step 3</div>
+        <div class="mt-1 text-sm font-semibold">Issue & send</div>
+        <p class="mt-1 text-sm text-gray-600">Lock numbers, generate PDF, and deliver with a live pay link.</p>
+      </div>
+      <div class="rounded-2xl border bg-white p-6 shadow-sm">
+        <div class="text-xs font-medium text-gray-500">Step 4</div>
+        <div class="mt-1 text-sm font-semibold">Get paid</div>
+        <p class="mt-1 text-sm text-gray-600">Receive payment, send receipt, and stop reminders automatically.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section id="pricing" class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-14">
+    <div class="mx-auto max-w-3xl text-center">
+      <h2 class="text-3xl sm:text-4xl font-semibold tracking-tight">Simple pricing</h2>
+      <p class="mt-3 text-lg text-gray-600">Try it free for 7 days. Upgrade any time. No credit card required to start.</p>
+    </div>
+    <div class="mt-10 grid md:grid-cols-3 gap-6">
+      <div *ngFor="let p of plans" class="rounded-2xl border bg-white p-6 shadow-sm flex flex-col" [ngClass]="{'ring-1 ring-slate-900/5': (p.priceCents || 0) > 0}">
+        <div class="inline-flex items-center gap-2">
+          <div class="text-sm font-semibold">{{ p.name }}</div>
+          <span *ngIf="p.code === 'BASIC_MONTHLY'" class="text-xs rounded-full bg-slate-900 text-white px-2 py-0.5">Most popular</span>
+        </div>
+        <div class="mt-1 text-3xl font-semibold">{{ priceLabel(p) }}<span *ngIf="p.interval==='MONTH'" class="text-base text-gray-500">/mo</span><span *ngIf="p.interval==='YEAR'" class="text-base text-gray-500">/yr</span></div>
+        <div class="text-sm text-gray-600">{{ (p.trialDays||0) > 0 ? ('Free ' + p.trialDays + '‑day trial') : '' }}</div>
+        <ul class="mt-4 space-y-2 text-sm text-gray-700">
+          <li>✔ Branded PDF invoices</li>
+          <li>✔ Email templates</li>
+          <li>✔ Reminders automation</li>
+        </ul>
+        <a routerLink="/auth" [queryParams]="{ mode: 'signup' }" class="mt-5 w-full inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium" [ngClass]="{ 'bg-slate-900 text-white': (p.priceCents || 0) > 0, 'border': (p.priceCents || 0) === 0 }">
+          {{ (p.priceCents || 0) > 0 ? ('Choose ' + p.name) : 'Start free' }}
+        </a>
+      </div>
+    </div>
+  </section>
+
+  
+
+  <!-- Demo CTA -->
+  <section id="demo" class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-14">
+    <div class="rounded-2xl border bg-white p-8 text-center">
+      <h3 class="text-xl font-semibold tracking-tight">Try the live demo</h3>
+      <p class="mt-2 text-gray-600">Sign up to try the app — free 7‑day trial.</p>
+      <a routerLink="/auth" [queryParams]="{ mode: 'login' }" class="mt-5 inline-flex items-center gap-2 rounded-xl bg-slate-900 text-white px-5 py-2.5 text-sm font-medium">Open app</a>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-14">
+    <div class="mx-auto max-w-3xl text-center">
+      <h2 class="text-2xl sm:text-3xl font-semibold tracking-tight">FAQ</h2>
+      <p class="mt-2 text-gray-600">Answers to common questions about billing, email, and sign‑in.</p>
+    </div>
+    <div class="mt-8 grid md:grid-cols-2 gap-6">
+      <div class="rounded-2xl border bg-white p-6">
+        <div class="text-sm font-semibold">Can I export invoices to PDF?</div>
+        <p class="mt-1 text-sm text-gray-600">Yes — export any invoice as a branded PDF and download it instantly.</p>
+      </div>
+      <div class="rounded-2xl border bg-white p-6">
+        <div class="text-sm font-semibold">Can I send invoices and reminders via email?</div>
+        <p class="mt-1 text-sm text-gray-600">Yes emails are sent via Mailtrap API.</p>
+      </div>
+      <div class="rounded-2xl border bg-white p-6">
+        <div class="text-sm font-semibold">Is there a free trial?</div>
+        <p class="mt-1 text-sm text-gray-600">Yes — a 7‑day trial is included. Upgrade anytime to continue.</p>
+      </div>
+      <div class="rounded-2xl border bg-white p-6">
+        <div class="text-sm font-semibold">Do I need an account?</div>
+        <p class="mt-1 text-sm text-gray-600">Yes — sign in to save data and sync across devices.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="border-t bg-white/70">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between text-sm text-gray-600">
+      <span>© {{ currentYear }} {{ BRAND }}</span>
+      <div class="flex items-center gap-4">
+        <a href="#features" class="hover:text-gray-900">Features</a>
+        <a href="#demo" class="hover:text-gray-900">Live demo</a>
+        <a href="#faq" class="hover:text-gray-900">FAQ</a>
+      </div>
+    </div>
+  </footer>
+</div>

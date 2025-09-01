@@ -1,0 +1,14 @@
+<span class="inline-flex items-center gap-2 rounded-full border px-2 py-0.5 text-xs"
+  [ngClass]="{
+    'bg-amber-100 text-amber-800 border-amber-200': status === 'issued',
+    'bg-emerald-100 text-emerald-800 border-emerald-200': status === 'paid',
+    'bg-rose-100 text-rose-800 border-rose-200': status === 'overdue'
+  }">
+  <span class="h-2 w-2 rounded-full"
+    [ngClass]="{
+      'bg-amber-500': status === 'issued',
+      'bg-emerald-600': status === 'paid',
+      'bg-rose-600': status === 'overdue'
+    }"></span>
+  {{ status | titlecase }}
+</span>

@@ -1,0 +1,24 @@
+
+  <h1 class="text-2xl font-semibold tracking-tight">Subscription</h1>
+  <div class="mt-6 card">
+    <div class="section-title">Current plan</div>
+    <ng-container *ngIf="sub && sub.status; else noSub">
+      <div class="mt-3 text-sm flex items-center justify-between">
+        <div>
+          <div class="font-medium">{{ sub.planCode || '—' }}</div>
+          <div class="text-xs text-gray-600">Status: {{ sub.status }}</div>
+        </div>
+        <div class="text-xs text-gray-600" *ngIf="sub.daysLeft !== null && sub.daysLeft !== undefined">{{ sub.daysLeft }} days left</div>
+      </div>
+      <div class="mt-4 flex items-center gap-2">
+        <button class="btn-primary" (click)="upgrade()">Upgrade</button>
+        <button class="btn-ghost" (click)="manage()">Manage</button>
+      </div>
+    </ng-container>
+    <ng-template #noSub>
+      <div class="mt-3 text-sm">No active subscription.</div>
+      <div class="mt-4">
+        <button class="btn-primary" [disabled]="loading" (click)="startTrial()">Start 7‑day free trial</button>
+      </div>
+    </ng-template>
+  </div>

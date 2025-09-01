@@ -1,0 +1,59 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: RDS PostgreSQL and Secrets Manager secret
+
+Parameters:
+  NetworkStackName:
+    Type: String
+  DBName:
+    Type: String
+    Default: invoicedb
+  DBInstanceClass:
+    Type: String
+    Default: db.t3.small
+  AllocatedStorage:
+    Type: Number
+    Default: 20
+
+Resources:
+  DbSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub ${AWS::StackName}/db/master
+      GenerateSecretString:
+        SecretStringTemplate: !Sub '{"username":"invoice"}'
+        GenerateStringKey: password
+        PasswordLength: 24
+        ExcludePunctuation: true
+
+  DbSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: DB subnet group
+      SubnetIds: !Split [",", { 'Fn::ImportValue': !Sub '${NetworkStackName}:PrivateDbSubnets' } ]
+
+  Postgres:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      Engine: postgres
+      EngineVersion: '15'
+      DBName: !Ref DBName
+      DBInstanceClass: !Ref DBInstanceClass
+      AllocatedStorage: !Ref AllocatedStorage
+      DBSubnetGroupName: !Ref DbSubnetGroup
+      VPCSecurityGroups:
+        - { 'Fn::ImportValue': !Sub '${NetworkStackName}:RdsSecurityGroupId' }
+      MasterUsername: !Sub '{{resolve:secretsmanager:${DbSecret}::username}}'
+      MasterUserPassword: !Sub '{{resolve:secretsmanager:${DbSecret}::password}}'
+      PubliclyAccessible: false
+      MultiAZ: false
+
+Outputs:
+  DbEndpoint:
+    Value: !GetAtt Postgres.Endpoint.Address
+    Export:
+      Name: !Sub "${AWS::StackName}:DbEndpoint"
+  DbSecretArn:
+    Value: !Ref DbSecret
+    Export:
+      Name: !Sub "${AWS::StackName}:DbSecretArn"
+

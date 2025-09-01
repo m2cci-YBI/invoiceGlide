@@ -1,0 +1,15 @@
+<div class="mt-6 card">
+  <div class="section-title">Mail provider</div>
+  <div class="mt-3 grid gap-3 text-sm">
+    <div class="flex items-center gap-2">
+      <button class="btn-ghost" (click)="connectToGoogle()">Connect to Google</button>
+      <button class="btn-ghost" (click)="connectToMicrosoft()">Connect to Microsoft</button>
+    </div>
+    <div *ngIf="googleConnectedAccount" class="text-sm">
+      Google Connected as: {{googleConnectedAccount}}
+    </div>
+    <div *ngIf="microsoftConnectedAccount" class="text-sm">
+      Microsoft Connected as: {{microsoftConnectedAccount}}
+    </div>
+  </div>
+</div>

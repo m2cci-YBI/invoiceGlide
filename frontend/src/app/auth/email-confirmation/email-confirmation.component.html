@@ -1,0 +1,43 @@
+<div class="min-h-[60vh] flex items-center justify-center px-4">
+  <div class="w-full max-w-md">
+    <div class="card text-center">
+      <h2 class="text-xl font-semibold text-slate-900 mb-2">Email confirmation</h2>
+
+      <div *ngIf="status === 'pending'" class="text-slate-600">
+        <div class="inline-flex items-center gap-2">
+          <span class="h-4 w-4 rounded-full border-2 border-slate-300 border-t-slate-900 animate-spin"></span>
+          Confirming your email...
+        </div>
+      </div>
+
+      <div *ngIf="status === 'success'" class="rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 p-4">
+        Email confirmed successfully. Redirecting to the app…
+      </div>
+
+      <div *ngIf="status === 'error'" class="text-left">
+        <div class="rounded-xl border border-rose-200 bg-rose-50 text-rose-800 p-4">
+          {{ error || 'We could not confirm your email.' }}
+        </div>
+        <div class="mt-4">
+          <div class="text-sm text-slate-700 mb-2">Did the link expire? Resend a new confirmation email:</div>
+          <form (ngSubmit)="resend()" [formGroup]="resendForm" class="flex gap-2" novalidate>
+            <input formControlName="email" type="email" placeholder="you@example.com" class="input flex-1" />
+            <button class="btn-primary" type="submit" [disabled]="resendForm.invalid || resendStatus==='pending'">
+              <span *ngIf="resendStatus!=='pending'">Resend</span>
+              <span *ngIf="resendStatus==='pending'" class="inline-flex items-center gap-2">
+                <span class="h-4 w-4 rounded-full border-2 border-white/40 border-t-white animate-spin"></span>
+                Sending…
+              </span>
+            </button>
+          </form>
+          <div *ngIf="resendStatus==='success'" class="mt-2 text-sm text-emerald-700">Sent. Check your inbox.</div>
+          <div *ngIf="resendStatus==='error'" class="mt-2 text-sm text-rose-700">Failed to resend. Try again.</div>
+        </div>
+      </div>
+
+      <div class="mt-6">
+        <a routerLink="/auth" [queryParams]="{ mode: 'login' }" class="text-sm text-slate-600 hover:text-slate-900">Back to sign in</a>
+      </div>
+    </div>
+  </div>
+</div>

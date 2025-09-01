@@ -1,0 +1,70 @@
+<div class="mx-auto max-w-7xl py-8">
+  <div class="flex items-start justify-between">
+    <div>
+      <h1 class="text-2xl font-semibold tracking-tight">Invoices</h1>
+      <p class="mt-1 text-sm text-gray-600">Filter, sort, and send.</p>
+    </div>
+    <a routerLink="/new-invoice" class="btn-primary">
+      New invoice
+    </a>
+  </div>
+
+  <div class="mt-4 flex items-center gap-3">
+    <input
+      [(ngModel)]="query"
+      (ngModelChange)="filterInvoices()"
+      placeholder="Search number or client…"
+      class="input"
+    />
+    <select class="select" [(ngModel)]="selectedStatus" (change)="filterInvoices()">
+      <option>All statuses</option>
+      <option>Issued</option>
+      <option>Overdue</option>
+      <option>Paid</option>
+    </select>
+  </div>
+
+  <div class="mt-4 card">
+    <table class="table-modern">
+      <thead>
+        <tr>
+          <th class="py-2 pl-4">Number</th>
+          <th>Client</th>
+          <th>Issue date</th>
+          <th>Due date</th>
+          <th class="text-right">Total</th>
+          <th class="text-right pr-4">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let i of filteredInvoices" class="cursor-pointer" (click)="openDetail(i)">
+          <td class="py-2 pl-4 font-mono text-xs">{{ i.number }}</td>
+          <td>{{ i.clientName }}</td>
+          <td>{{ settingsService.formatDate(i.issueDate) }}</td>
+          <td>{{ settingsService.formatDate(i.dueDate) }}</td>
+          <td class="text-right">{{ dataService.currency(i.total, i.currency) }}</td>
+          <td class="text-right pr-4">
+            <span class="badge"
+              [ngClass]="{
+                'badge-amber': uiStatus(i) === 'issued',
+                'badge-emerald': uiStatus(i) === 'paid',
+                'badge-rose': uiStatus(i) === 'overdue'
+              }">
+              <span class="h-2 w-2 rounded-full"
+                [ngClass]="{
+                  'bg-amber-500': uiStatus(i) === 'issued',
+                  'bg-emerald-600': uiStatus(i) === 'paid',
+                  'bg-rose-600': uiStatus(i) === 'overdue'
+                }"></span>
+              {{ uiStatus(i) | titlecase }}
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div *ngIf="filteredInvoices?.length === 0" class="text-center py-10 text-sm text-slate-600">
+      <div class="mb-2">No invoices found.</div>
+      <a routerLink="/new-invoice" class="btn-ghost">Create your first invoice</a>
+    </div>
+  </div>
+</div>
