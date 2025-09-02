@@ -12,8 +12,7 @@ import org.springframework.web.cors.reactive.CorsWebFilter;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
 @Configuration
-public class C
-        orsConfig {
+public class CorsConfig {
 
     @Bean
     @ConditionalOnProperty(prefix = "cors", name = "allowed-origins")

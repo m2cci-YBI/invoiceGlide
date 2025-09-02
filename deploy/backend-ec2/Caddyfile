@@ -1,6 +1,0 @@
-:80 {
-  encode gzip
-  # Forward all requests to the gateway container
-  reverse_proxy gateway:8080
-}
-

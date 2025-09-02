@@ -2,12 +2,14 @@ Param(
   [string]$Alias = "y0v6t3a3",                    # your ECR Public alias
   [string]$Repo  = "invoices",                    # single repo to hold all images
   [string]$RegionPublic = "us-east-1",            # ECR Public auth region (fixed)
-  [string]$AdminLocal   = "backend-admin-service",    # local image name (defaults to :latest)
+  [string]$AdminLocal   = "backend-admin-service",    # local image names (default :latest)
   [string]$InvoiceLocal = "backend-invoice-service",
   [string]$MailingLocal = "backend-mailing-service",
-  [string]$AdminTag     = "admin-latest",         # tag to use in the single repo
+  [string]$CaddyLocal   = "backend-caddy",
+  [string]$AdminTag     = "admin-latest",         # tags to use in the single repo
   [string]$InvoiceTag   = "invoice-latest",
-  [string]$MailingTag   = "mailing-latest"
+  [string]$MailingTag   = "mailing-latest",
+  [string]$CaddyTag     = "caddy-latest"
 )
 
 $ErrorActionPreference = "Stop"
@@ -35,22 +37,29 @@ function New-TempDockerConfig {
   return $cfg
 }
 
+function Resolve-LocalImage {
+  param([string]$ImageName)
+  # try exact
+  try {
+    docker image inspect $ImageName | Out-Null
+    return $ImageName
+  } catch {
+    # try with :latest
+    $candidate = "$ImageName`:latest"
+    docker image inspect $candidate | Out-Null
+    return $candidate
+  }
+}
+
 function Tag-And-Push {
   param(
     [string]$LocalImage,   # e.g., backend-admin-service   (defaults to :latest)
     [string]$DestUri,      # e.g., public.ecr.aws/alias/invoices:admin-latest
     [string]$DockerConfig  # path to temp docker config
   )
-  # Validate local image
-  try {
-    docker image inspect $LocalImage | Out-Null
-  } catch {
-    # Try with :latest if not specified
-    $LocalImage = "$LocalImage`:latest"
-    docker image inspect $LocalImage | Out-Null
-  }
-  Write-Host "Tagging $LocalImage -> $DestUri" -ForegroundColor Cyan
-  docker tag $LocalImage $DestUri
+  $resolved = Resolve-LocalImage -ImageName $LocalImage
+  Write-Host "Tagging $resolved -> $DestUri" -ForegroundColor Cyan
+  docker tag $resolved $DestUri
   Write-Host "Pushing $DestUri" -ForegroundColor Green
   docker --config $DockerConfig push $DestUri
 }
@@ -66,12 +75,14 @@ Ensure-EcrPublicRepo -Name $Repo
 $cfg = New-TempDockerConfig
 Write-Host "Temporary Docker config: $cfg" -ForegroundColor DarkGray
 
-# Tag & push all three images into SAME repo, different tags
+# Tag & push all four images into SAME repo, different tags
 Tag-And-Push -LocalImage $AdminLocal   -DestUri "$($repoUri):$AdminTag"   -DockerConfig $cfg
 Tag-And-Push -LocalImage $InvoiceLocal -DestUri "$($repoUri):$InvoiceTag" -DockerConfig $cfg
 Tag-And-Push -LocalImage $MailingLocal -DestUri "$($repoUri):$MailingTag" -DockerConfig $cfg
+Tag-And-Push -LocalImage $CaddyLocal   -DestUri "$($repoUri):$CaddyTag"   -DockerConfig $cfg
 
 Write-Host "`nDone. Image URIs:" -ForegroundColor Yellow
 Write-Host "  $($repoUri):$AdminTag"
 Write-Host "  $($repoUri):$InvoiceTag"
 Write-Host "  $($repoUri):$MailingTag"
+Write-Host "  $($repoUri):$CaddyTag"
