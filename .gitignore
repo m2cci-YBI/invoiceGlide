@@ -40,3 +40,45 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# --- Java / Maven ---
+backend/**/target/
+*.class
+
+# --- Frontend (Angular/Node) ---
+# ignore nested node_modules and build outputs in frontend
+**/node_modules/
+frontend/dist/
+frontend/out-tsc/
+frontend/.angular/cache/
+frontend/.svelte-kit/
+frontend/build/
+
+# --- Docker / Env files (keep examples) ---
+.env
+*.env
+**/.env
+**/.env.local
+**/.env.*.local
+!.env.example
+!**/.env.example
+!deploy/backend-ec2/.env.aws.example
+deploy/backend-ec2/.env
+backend/.env
+
+# --- Local compose overrides ---
+docker-compose.local*.yml
+**/docker-compose.local*.yml
+
+# --- Keys and secrets ---
+*.pem
+*.ppk
+*.key
+*.p12
+*.jks
+*.keystore
+.envrc
+
+# --- Logs ---
+*.log
+**/logs/
