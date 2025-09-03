@@ -15,6 +15,7 @@ public class MailTemplateEntity {
     @Column(length = 2048)
     private String subject;
     @Lob
+    @Column(columnDefinition = "TEXT")
     private String bodyHtml;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;

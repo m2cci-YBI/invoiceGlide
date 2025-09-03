@@ -22,6 +22,7 @@ spring:
   sql:
     init:
       mode: always
+      data-locations: classpath:seed.sql
 
 management:
   endpoints:
@@ -33,15 +34,9 @@ app:
   stripe:
     secret: ${STRIPE_SECRET}
   base-url: ${APP_BASE_URL}
-  seed:
-    user:
-      email: ${SEED_USER_EMAIL}
-      password: ${SEED_USER_PASSWORD}
-      name: ${SEED_USER_NAME}
 
 security:
   jwt:
     secret: ${JWT_SECRET}
     access-ttl: ${JWT_ACCESS_TTL}
     refresh-ttl: ${JWT_REFRESH_TTL}
-

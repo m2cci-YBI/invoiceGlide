@@ -24,6 +24,7 @@ spring:
   sql:
     init:
       mode: always
+      data-locations: classpath:seed.sql
   lifecycle:
     timeout-per-shutdown-phase: 30s
 

@@ -10,4 +10,3 @@ WORKDIR /app
 COPY --from=build /build/invoice-service/target/*.jar /app/app.jar
 EXPOSE 8082
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar"]
-

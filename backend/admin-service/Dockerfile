@@ -11,4 +11,3 @@ WORKDIR /app
 COPY --from=build /build/admin-service/target/*.jar /app/app.jar
 EXPOSE 8081
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar"]
-
