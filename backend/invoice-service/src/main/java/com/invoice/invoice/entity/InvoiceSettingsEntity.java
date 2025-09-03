@@ -16,22 +16,22 @@ public class InvoiceSettingsEntity {
     private String legalName;
     private String taxId;
     private String supportEmail;
-    @Lob
+    @Column(columnDefinition = "text")
     private String legalFooter;
     private String currency;
     private String dateFormat;
     private String numberFormat;
-    @Lob
+    @Column(columnDefinition = "text")
     private String logoDataUrl;
     private String invoiceNumberPrefix;
     private Integer invoiceNumberCounter;
-    @Lob
+    @Column(columnDefinition = "text")
     private String templateTaxesJson;
-    @Lob
+    @Column(columnDefinition = "text")
     private String templateDiscountsJson;
-    @Lob
+    @Column(columnDefinition = "text")
     private String invoiceStylesJson;
-    @Lob
+    @Column(columnDefinition = "text")
     private String emailTemplatesJson;
 
     @Column(nullable = false)

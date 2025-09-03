@@ -55,12 +55,23 @@ public class StartupSeeder {
             nu.setName(seedName == null || seedName.isBlank() ? seedEmail : seedName);
             nu.setRole(Role.USER);
             nu.setPasswordHash(encoder.encode(seedPassword));
+            // Ensure the env-seeded user can log in immediately
+            nu.setEmailConfirmed(true);
+            nu.setEmailConfirmationToken(null);
+            nu.setEmailConfirmationTokenExpires(null);
             return users.save(nu);
         });
         // Update password if changed
         if (!encoder.matches(seedPassword, u.getPasswordHash())) {
             u.setPasswordHash(encoder.encode(seedPassword));
             if (seedName != null && !seedName.isBlank()) u.setName(seedName);
+            users.save(u);
+        }
+        // Ensure email is confirmed for the env-seeded user (covers already-existing user)
+        if (!u.isEmailConfirmed()) {
+            u.setEmailConfirmed(true);
+            u.setEmailConfirmationToken(null);
+            u.setEmailConfirmationTokenExpires(null);
             users.save(u);
         }
         // Ensure a subscription exists

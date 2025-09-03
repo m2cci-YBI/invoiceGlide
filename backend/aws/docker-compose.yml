@@ -3,6 +3,7 @@ version: "3.9"
 services:
   # Caddy edge (uses entrypoint to render Caddyfile)
   caddy:
+    mem_limit: 64m
     image: public.ecr.aws/y0v6t3a3/invoices:caddy-latest
     restart: unless-stopped
     ports:
@@ -23,18 +24,21 @@ services:
 
   # Backends (note the service names!)
   admin-service:
+    mem_limit: 250m
     image: public.ecr.aws/y0v6t3a3/invoices:admin-latest
     restart: unless-stopped
     env_file: .env
     networks: [ appnet ]
 
   invoice-service:
+    mem_limit: 250m
     image: public.ecr.aws/y0v6t3a3/invoices:invoice-latest
     restart: unless-stopped
     env_file: .env
     networks: [ appnet ]
 
   mailing-service:
+    mem_limit: 250m
     image: public.ecr.aws/y0v6t3a3/invoices:mailing-latest
     restart: unless-stopped
     env_file: .env
