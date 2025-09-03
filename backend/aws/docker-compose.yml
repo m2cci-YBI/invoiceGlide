@@ -1,0 +1,48 @@
+version: "3.9"
+
+services:
+  # Caddy edge (uses entrypoint to render Caddyfile)
+  caddy:
+    image: public.ecr.aws/y0v6t3a3/invoices:caddy-latest
+    restart: unless-stopped
+    ports:
+      - "80:80"          # add "443:443" when you switch to prod/HTTPS + domain
+    environment:
+      CADDY_MODE: "dev"              # dev | prod | auto  (dev = HTTP on :80)
+      # CADDY_DOMAIN: "api.example.com"   # required if CADDY_MODE=prod
+      # CADDY_EMAIL:  "you@example.com"   # optional Let's Encrypt contact
+      CORS_ALLOWED_ORIGINS: "*"      # set your frontend origin in prod
+    depends_on:
+      - admin-service
+      - invoice-service
+      - mailing-service
+    volumes:
+      - caddy_data:/data             # certs persist when you enable HTTPS
+      - caddy_config:/config
+    networks: [ appnet ]
+
+  # Backends (note the service names!)
+  admin-service:
+    image: public.ecr.aws/y0v6t3a3/invoices:admin-latest
+    restart: unless-stopped
+    env_file: .env
+    networks: [ appnet ]
+
+  invoice-service:
+    image: public.ecr.aws/y0v6t3a3/invoices:invoice-latest
+    restart: unless-stopped
+    env_file: .env
+    networks: [ appnet ]
+
+  mailing-service:
+    image: public.ecr.aws/y0v6t3a3/invoices:mailing-latest
+    restart: unless-stopped
+    env_file: .env
+    networks: [ appnet ]
+
+networks:
+  appnet: { driver: bridge }
+
+volumes:
+  caddy_data:
+  caddy_config:

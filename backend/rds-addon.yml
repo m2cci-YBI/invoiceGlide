@@ -1,0 +1,85 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: RDS PostgreSQL add-on for an existing VPC/EC2 stack (uses existing VPC & subnet, creates a second subnet, DB subnet group, and RDS SG).
+
+Parameters:
+  VpcId:
+    Type: String
+    Description: VPC where your EC2 instance lives (same VPC for the DB).
+  ExistingSubnetId:
+    Type: String
+    Description: The subnet ID where your EC2 instance currently runs.
+  SecondSubnetCidr:
+    Type: String
+    Default: 10.30.2.0/24
+    Description: CIDR for a new subnet in a different AZ (required by RDS subnet group).
+  EC2SecurityGroupId:
+    Type: String
+    Description: Security Group ID attached to your EC2 instance (allowed to access DB:5432).
+  DBInstanceClass:
+    Type: String
+    Default: db.t3.micro
+  DBName:
+    Type: String
+    Default: invoicedb
+  DBUsername:
+    Type: String
+    Default: invoice_user
+  DBPassword:
+    Type: String
+    NoEcho: true
+    MinLength: 8
+
+Resources:
+  # Create a second subnet in a different AZ for the DB subnet group
+  SecondSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VpcId
+      CidrBlock: !Ref SecondSubnetCidr
+      MapPublicIpOnLaunch: false
+      AvailabilityZone: !Select [1, !GetAZs ""]
+      Tags:
+        - { Key: Name, Value: !Sub 'db-subnet-2-${AWS::StackName}' }
+
+  RDSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow Postgres from EC2 SG
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          SourceSecurityGroupId: !Ref EC2SecurityGroupId
+
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnet group for RDS (requires 2 AZs)
+      SubnetIds:
+        - !Ref ExistingSubnetId
+        - !Ref SecondSubnet
+
+  PostgresDB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      Engine: postgres
+      # EngineVersion intentionally omitted to use AWS default current minor for the chosen major
+      MasterUsername: !Ref DBUsername
+      MasterUserPassword: !Ref DBPassword
+      DBName: !Ref DBName
+      DBInstanceClass: !Ref DBInstanceClass
+      AllocatedStorage: 20
+      PubliclyAccessible: false
+      DeletionProtection: false
+      MultiAZ: false
+      VPCSecurityGroups: [ !Ref RDSSecurityGroup ]
+      DBSubnetGroupName: !Ref DBSubnetGroup
+
+Outputs:
+  RDSEndpoint:
+    Description: RDS writer endpoint DNS name
+    Value: !GetAtt PostgresDB.Endpoint.Address
+  RDSPort:
+    Description: Port
+    Value: !GetAtt PostgresDB.Endpoint.Port
