@@ -1,0 +1,121 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >
+  Free-tier friendly stack: Angular SPA on S3 + CloudFront with SPA routing fallback.
+  Proxies /api/* to existing EC2 backend (Caddy). No custom domain.
+
+Parameters:
+  BackendPublicDnsName:
+    Type: String
+    Description: "EC2 public DNS of your backend gateway (e.g., ec2-3-137-188-125.us-east-2.compute.amazonaws.com). NOT an IP."
+  ApiPathPattern:
+    Type: String
+    Default: "/api/*"
+    Description: "Path pattern for API requests that should be proxied to the backend."
+
+Resources:
+  FrontendBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      # Do NOT set WebsiteConfiguration when using CloudFront+OAI with the REST endpoint.
+
+  FrontendBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FrontendBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowCloudFrontReadViaOAI
+            Effect: Allow
+            Principal:
+              CanonicalUser: !GetAtt CloudFrontOAI.S3CanonicalUserId
+            Action:
+              - s3:GetObject
+            Resource: !Sub "${FrontendBucket.Arn}/*"
+
+  CloudFrontOAI:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: "OAI for S3 Angular SPA"
+
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        HttpVersion: http2
+        DefaultRootObject: index.html
+        PriceClass: PriceClass_100  # free-tier friendly (US/Canada/Europe)
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
+          MinimumProtocolVersion: TLSv1.2_2021
+        Origins:
+          - Id: S3Frontend
+            DomainName: !GetAtt FrontendBucket.RegionalDomainName
+            S3OriginConfig:
+              OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${CloudFrontOAI}"
+          - Id: BackendEC2
+            DomainName: !Ref BackendPublicDnsName
+            CustomOriginConfig:
+              HTTPPort: 80
+              HTTPSPort: 443
+              OriginProtocolPolicy: http-only
+              OriginReadTimeout: 30
+              OriginKeepaliveTimeout: 5
+        DefaultCacheBehavior:
+          TargetOriginId: S3Frontend
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: ["GET", "HEAD", "OPTIONS"]
+          CachedMethods: ["GET", "HEAD"]
+          Compress: true
+          ForwardedValues:
+            QueryString: false
+            Cookies:
+              Forward: none
+        CacheBehaviors:
+          - PathPattern: !Ref ApiPathPattern
+            TargetOriginId: BackendEC2
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods: ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+            CachedMethods: ["GET", "HEAD"]
+            Compress: true
+            ForwardedValues:
+              QueryString: true
+              Headers: ["*"]
+              Cookies:
+                Forward: all
+            MinTTL: 0
+            DefaultTTL: 0
+            MaxTTL: 0
+        CustomErrorResponses:
+          # SPA fallback so Angular handles client-side routes
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+
+Outputs:
+  BucketName:
+    Description: "S3 bucket to upload Angular build artifacts"
+    Value: !Ref FrontendBucket
+  CloudFrontDomain:
+    Description: "Access your app at this CloudFront URL"
+    Value: !GetAtt CloudFrontDistribution.DomainName
+  DistributionId:
+    Description: "CloudFront Distribution ID (use for invalidations)"
+    Value: !Ref CloudFrontDistribution

@@ -1,9 +1,0 @@
-{
-  "/api": {
-    "target": "http://3.137.188.125",
-    "secure": false,
-    "changeOrigin": true,
-    "logLevel": "info"
-  }
-}
-

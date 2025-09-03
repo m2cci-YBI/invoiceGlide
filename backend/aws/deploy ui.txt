@@ -1,0 +1,48 @@
+$ aws cloudformation describe-stacks   --stack-name angular-spa-s3-cf   --query "Stacks[0].Outputs"
+[                                                                                                                                                                                  
+    {
+        "OutputKey": "BucketName",
+        "OutputValue": "angular-spa-s3-cf-frontendbucket-ykvunwl25kva",
+        "Description": "S3 bucket to upload Angular build artifacts"
+    },
+    {
+        "OutputKey": "DistributionId",
+        "OutputValue": "E2KKEDOTN92AS3",
+        "Description": "CloudFront Distribution ID (use for invalidations)"
+    },
+    {
+        "OutputKey": "CloudFrontDomain",
+        "OutputValue": "d1irn33k13xku4.cloudfront.net",
+        "Description": "Access your app at this CloudFront URL"
+    }
+]
+
+
+
+aws s3 sync dist/invoice-angular-ui/ s3://angular-spa-s3-cf-frontendbucket-ykvunwl25kva/ --delete
+
+
+aws s3 cp dist/invoice-angular-ui/index.html s3://angular-spa-s3-cf-frontendbucket-ykvunwl25kva/index.html \
+  --cache-control "no-cache, no-store, must-revalidate" \
+  --content-type "text/html"
+  
+  
+  
+acces link :  https://d1irn33k13xku4.cloudfront.net
+
+
+---------------------------------------------------------------------------------------------------------------
+
+# 1) Build
+ng build --configuration production
+
+# 3) Upload the new build (replaces/cleans removed files)
+aws s3 sync dist/invoice-angular-ui/ s3://angular-spa-s3-cf-frontendbucket-ykvunwl25kva/ --delete
+
+# 4) Make the SPA shell fresh and (optionally) invalidate it
+aws s3 cp dist/invoice-angular-ui/index.html s3://angular-spa-s3-cf-frontendbucket-ykvunwl25kva/index.html \
+  --cache-control "no-cache, no-store, must-revalidate" \
+  --content-type "text/html"
+
+# Optional: fast refresh of the shell
+aws cloudfront create-invalidation --distribution-id E2KKEDOTN92AS3 --paths '/index.html'    (use powershell)
