@@ -46,3 +46,6 @@ aws s3 cp dist/invoice-angular-ui/index.html s3://angular-spa-s3-cf-frontendbuck
 
 # Optional: fast refresh of the shell
 aws cloudfront create-invalidation --distribution-id E2KKEDOTN92AS3 --paths '/index.html'    (use powershell)
+
+# invalidate the files that were modified
+aws cloudfront create-invalidation --distribution-id E2KKEDOTN92AS3 --paths '/assets/logo.png' '/index.html'
