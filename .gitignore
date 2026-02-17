@@ -54,6 +54,10 @@ frontend/.angular/cache/
 frontend/.svelte-kit/
 frontend/build/
 
+##Mail Trap
+
+MailTrap_Palio_1995_702.txt
+
 # --- Docker / Env files (keep examples) ---
 .env
 *.env
@@ -64,7 +68,10 @@ frontend/build/
 !**/.env.example
 !deploy/backend-ec2/.env.aws.example
 deploy/backend-ec2/.env
+
 backend/.env
+backend/.idea
+backend/aws
 
 # --- Local compose overrides ---
 docker-compose.local*.yml
